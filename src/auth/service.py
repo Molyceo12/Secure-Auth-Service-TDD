@@ -25,3 +25,7 @@ class UserService:
         user = User(username, self.hasher.hash(password))
         self.repository.add(user)
         return user
+
+    def login(self, username: str, password: str) -> User:
+        """Return the user if the password is correct."""
+        raise NotImplementedError(username + password[:0])
