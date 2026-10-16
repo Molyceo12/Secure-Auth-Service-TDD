@@ -1,5 +1,7 @@
 """Password hashing with bcrypt."""
 
+import bcrypt
+
 from auth.interfaces import PasswordHasher
 
 
@@ -11,8 +13,9 @@ class BcryptPasswordHasher(PasswordHasher):
 
     def hash(self, password: str) -> str:
         """Return a salted bcrypt hash of the password."""
-        raise NotImplementedError(self.rounds)
+        salt = bcrypt.gensalt(rounds=self.rounds)
+        return bcrypt.hashpw(password.encode(), salt).decode()
 
     def verify(self, password: str, password_hash: str) -> bool:
         """Return ``True`` if the password matches the hash."""
-        raise NotImplementedError(self.rounds)
+        return bcrypt.checkpw(password.encode(), password_hash.encode())
