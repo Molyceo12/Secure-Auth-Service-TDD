@@ -1,6 +1,10 @@
 """User service: the main entry point of the authentication module."""
 
-from auth.exceptions import InvalidPasswordError, UserAlreadyExistsError
+from auth.exceptions import (
+    InvalidPasswordError,
+    UserAlreadyExistsError,
+    UserNotFoundError,
+)
 from auth.interfaces import PasswordHasher, UserRepository
 from auth.models import User
 
@@ -29,6 +33,8 @@ class UserService:
     def login(self, username: str, password: str) -> User:
         """Return the user if the password is correct."""
         user = self.repository.get(username)
-        if user is not None and self.hasher.verify(password, user.password_hash):
+        if user is None:
+            raise UserNotFoundError(f"No user named {username}")
+        if self.hasher.verify(password, user.password_hash):
             return user
-        raise NotImplementedError("failed logins come in the next cycles")
+        raise NotImplementedError("wrong passwords come in the next cycle")
