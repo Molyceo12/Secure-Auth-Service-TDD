@@ -1,4 +1,4 @@
-"""Tests for structured logging of auth events."""
+"""Tests that auth events are logged (and passwords never are)."""
 
 import logging
 from unittest.mock import MagicMock
@@ -10,28 +10,51 @@ from auth.models import User
 from auth.service import UserService
 
 
-def test_auth_events_are_logged_without_passwords(
+@pytest.fixture(autouse=True)
+def capture_info_logs(caplog: pytest.LogCaptureFixture) -> None:
+    """Record INFO and higher log lines from the service in every test."""
+    caplog.set_level(logging.INFO, logger="auth.service")
+
+
+def test_registration_is_logged(
+    service: UserService, caplog: pytest.LogCaptureFixture
+) -> None:
+    service.register("alice", "secret123")
+    assert "user registered username=alice" in caplog.text
+    assert "secret123" not in caplog.text
+
+
+def test_successful_login_is_logged(
     service: UserService,
     repository: MagicMock,
     hasher: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    caplog.set_level(logging.INFO, logger="auth.service")
-    service.register("alice", "secret123")
     repository.get.return_value = User("alice", "hashed")
-    hasher.verify.side_effect = [True, False]
+    hasher.verify.return_value = True
     service.login("alice", "secret123")
+    assert "login succeeded username=alice" in caplog.text
+
+
+def test_wrong_password_is_logged_as_warning(
+    service: UserService,
+    repository: MagicMock,
+    hasher: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    repository.get.return_value = User("alice", "hashed")
+    hasher.verify.return_value = False
     with pytest.raises(InvalidPasswordError):
         service.login("alice", "wrong-pass")
-    repository.get.return_value = None
+    assert caplog.records[-1].levelname == "WARNING"
+    assert "login failed username=alice reason=wrong password" in caplog.text
+    assert "wrong-pass" not in caplog.text
+
+
+def test_unknown_user_is_logged_as_warning(
+    service: UserService, caplog: pytest.LogCaptureFixture
+) -> None:
     with pytest.raises(UserNotFoundError):
         service.login("bob", "secret123")
-
-    assert [(r.levelname, r.getMessage()) for r in caplog.records] == [
-        ("INFO", "user registered username=alice"),
-        ("INFO", "login succeeded username=alice"),
-        ("WARNING", "login failed username=alice reason=wrong password"),
-        ("WARNING", "login failed username=bob reason=unknown user"),
-    ]
-    assert "secret123" not in caplog.text
-    assert "wrong-pass" not in caplog.text
+    assert caplog.records[-1].levelname == "WARNING"
+    assert "login failed username=bob reason=unknown user" in caplog.text
