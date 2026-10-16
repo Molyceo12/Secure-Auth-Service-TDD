@@ -35,6 +35,6 @@ class UserService:
         user = self.repository.get(username)
         if user is None:
             raise UserNotFoundError(f"No user named {username}")
-        if self.hasher.verify(password, user.password_hash):
-            return user
-        raise NotImplementedError("wrong passwords come in the next cycle")
+        if not self.hasher.verify(password, user.password_hash):
+            raise InvalidPasswordError("Wrong password")
+        return user
