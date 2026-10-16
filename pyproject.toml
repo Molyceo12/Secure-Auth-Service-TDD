@@ -1,13 +1,14 @@
 [project]
-name = "auth"
+name = "secure-auth-service"
 version = "0.1.0"
-description = ""
+description = "Secure user authentication library (registration, login, bcrypt) built with TDD."
 authors = [
     {name = "Irimaso Maurice",email = "irimasomaurice@gmail.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "bcrypt (>=5.0.0,<6.0.0)"
 ]
 
 [tool.poetry]
@@ -16,3 +17,59 @@ packages = [{include = "auth", from = "src"}]
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "pytest (>=9.1.1,<10.0.0)",
+    "pytest-mock (>=3.16.0,<4.0.0)",
+    "pytest-cov (>=7.1.0,<8.0.0)",
+    "black (>=26.10.1,<27.0.0)",
+    "ruff (>=0.17.1,<0.18.0)",
+    "pylint (>=4.1.3,<5.0.0)",
+    "mypy (>=2.4.0,<3.0.0)",
+    "pre-commit (>=4.7.0,<5.0.0)"
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
+
+[tool.pylint.main]
+py-version = "3.11"
+init-hook = "import sys; sys.path[:0] = ['src', '.']"
+
+[tool.pylint.basic]
+# Test names describe what they check, so test functions need no docstring.
+no-docstring-rgx = "^(_|test_)"
+
+[tool.pylint.design]
+# Small classes with one job are intended.
+min-public-methods = 1
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+mypy_path = "src"
+files = ["src", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"
+
+[tool.coverage.run]
+source = ["auth"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 100
+exclude_also = ["@(abc\\.)?abstractmethod"]
