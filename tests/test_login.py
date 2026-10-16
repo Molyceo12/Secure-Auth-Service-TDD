@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from auth.exceptions import UserNotFoundError
+from auth.exceptions import InvalidPasswordError, UserNotFoundError
 from auth.models import User
 from auth.service import UserService
 
@@ -26,3 +26,13 @@ def test_login_unknown_username_raises(service: UserService, hasher: MagicMock) 
         service.login("bob", "secret123")
 
     hasher.verify.assert_not_called()
+
+
+def test_login_wrong_password_raises(
+    service: UserService, repository: MagicMock, hasher: MagicMock
+) -> None:
+    repository.get.return_value = ALICE
+    hasher.verify.return_value = False
+
+    with pytest.raises(InvalidPasswordError):
+        service.login("alice", "wrong-pass")
