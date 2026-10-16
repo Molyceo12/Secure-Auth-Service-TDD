@@ -13,4 +13,6 @@ class UserService:
 
     def register(self, username: str, password: str) -> User:
         """Register a new user and return it."""
-        return User(username, password)
+        user = User(username, self.hasher.hash(password))
+        self.repository.add(user)
+        return user
