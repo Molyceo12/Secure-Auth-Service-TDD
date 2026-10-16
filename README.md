@@ -6,7 +6,7 @@ logging. Built with strict **Test-Driven Development** and **SOLID** design.
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
-![Tests](https://img.shields.io/badge/tests-16%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-20%20passed-brightgreen)
 
 ---
 
@@ -144,16 +144,16 @@ python -m poetry run python -m pytest -v
 python -m poetry run python -m pytest --cov --cov-report=term-missing
 ```
 
-**16 tests, 100% statement and branch coverage** (the run fails below 100%), see
+**20 tests, 100% statement and branch coverage** (the run fails below 100%), see
 [`reports/coverage.txt`](reports/coverage.txt).
 
 | Test file | Covers | Techniques |
 |---|---|---|
 | `test_registration.py` | register, duplicates, password policy | `pytest-mock` (mocked repository and hasher), `parametrize`, `pytest.raises` |
 | `test_login.py` | login success and failures | `pytest-mock`, `pytest.raises` |
-| `test_logging.py` | auth log lines, no passwords in logs | `caplog` |
+| `test_logging.py` | each auth event is logged, no passwords in logs | `caplog`, autouse fixture |
 | `test_repository.py` | in-memory storage | plain asserts |
-| `test_hasher.py` | real bcrypt hashing and verification | fixture, `parametrize` |
+| `test_hasher.py` | real bcrypt hashing and verification | fixture |
 | `test_integration.py` | register + login with real parts | no mocks |
 
 Shared fixtures in `tests/conftest.py` provide a mocked repository, a mocked hasher
