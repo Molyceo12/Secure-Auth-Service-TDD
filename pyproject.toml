@@ -1,7 +1,7 @@
 [project]
-name = "auth"
+name = "secure-auth-service"
 version = "0.1.0"
-description = ""
+description = "Secure user authentication library (registration, login, bcrypt) built with TDD."
 authors = [
     {name = "Irimaso Maurice",email = "irimasomaurice@gmail.com"}
 ]
@@ -29,3 +29,47 @@ dev = [
     "mypy (>=2.4.0,<3.0.0)",
     "pre-commit (>=4.7.0,<5.0.0)"
 ]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
+
+[tool.pylint.main]
+py-version = "3.11"
+init-hook = "import sys; sys.path[:0] = ['src', '.']"
+
+[tool.pylint.basic]
+# Test names describe what they check, so test functions need no docstring.
+no-docstring-rgx = "^(_|test_)"
+
+[tool.pylint.design]
+# Small classes with one job are intended.
+min-public-methods = 1
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+mypy_path = "src"
+files = ["src", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"
+
+[tool.coverage.run]
+source = ["auth"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 100
+exclude_also = ["@(abc\\.)?abstractmethod"]
