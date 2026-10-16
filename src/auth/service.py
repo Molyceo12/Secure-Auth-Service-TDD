@@ -1,6 +1,6 @@
 """User service: the main entry point of the authentication module."""
 
-from auth.exceptions import UserAlreadyExistsError
+from auth.exceptions import InvalidPasswordError, UserAlreadyExistsError
 from auth.interfaces import PasswordHasher, UserRepository
 from auth.models import User
 
@@ -14,6 +14,8 @@ class UserService:
 
     def register(self, username: str, password: str) -> User:
         """Register a new user and return it."""
+        if len(password) < 8:
+            raise InvalidPasswordError("Password must be at least 8 characters")
         if self.repository.get(username) is not None:
             raise UserAlreadyExistsError(f"Username already taken: {username}")
         user = User(username, self.hasher.hash(password))
