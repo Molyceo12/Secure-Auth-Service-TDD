@@ -1,7 +1,9 @@
 """Tests for user registration."""
 
+import pytest
 from pytest_mock import MockerFixture
 
+from auth.exceptions import UserAlreadyExistsError
 from auth.interfaces import PasswordHasher, UserRepository
 from auth.models import User
 from auth.service import UserService
@@ -18,3 +20,15 @@ def test_register_hashes_password_and_saves_user(mocker: MockerFixture) -> None:
     assert user == User("alice", "hashed")
     hasher.hash.assert_called_once_with("secret123")
     repository.add.assert_called_once_with(user)
+
+
+def test_register_existing_username_raises(mocker: MockerFixture) -> None:
+    repository = mocker.create_autospec(UserRepository, instance=True)
+    hasher = mocker.create_autospec(PasswordHasher, instance=True)
+    repository.get.return_value = User("alice", "old-hash")
+
+    with pytest.raises(UserAlreadyExistsError):
+        UserService(repository, hasher).register("alice", "secret123")
+
+    repository.add.assert_not_called()
+    hasher.hash.assert_not_called()
