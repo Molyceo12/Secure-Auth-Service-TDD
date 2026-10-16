@@ -28,4 +28,7 @@ class UserService:
 
     def login(self, username: str, password: str) -> User:
         """Return the user if the password is correct."""
-        raise NotImplementedError(username + password[:0])
+        user = self.repository.get(username)
+        if user is not None and self.hasher.verify(password, user.password_hash):
+            return user
+        raise NotImplementedError("failed logins come in the next cycles")
