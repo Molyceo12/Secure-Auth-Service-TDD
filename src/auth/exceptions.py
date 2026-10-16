@@ -11,3 +11,7 @@ class UserAlreadyExistsError(AuthError):
 
 class InvalidPasswordError(AuthError):
     """Raised when a password breaks the password policy."""
+
+
+class UserNotFoundError(AuthError):
+    """Raised when logging in with a username that is not registered."""
