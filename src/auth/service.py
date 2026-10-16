@@ -1,5 +1,7 @@
 """User service: the main entry point of the authentication module."""
 
+import logging
+
 from auth.exceptions import (
     InvalidPasswordError,
     UserAlreadyExistsError,
@@ -9,6 +11,7 @@ from auth.interfaces import PasswordHasher, UserRepository
 from auth.models import User
 
 MIN_PASSWORD_LENGTH = 8  # password policy: shortest allowed password
+logger = logging.getLogger(__name__)
 
 
 class UserService:
@@ -28,13 +31,17 @@ class UserService:
             raise UserAlreadyExistsError(f"Username already taken: {username}")
         user = User(username, self.hasher.hash(password))
         self.repository.add(user)
+        logger.info("user registered username=%s", username)
         return user
 
     def login(self, username: str, password: str) -> User:
         """Return the user if the password is correct."""
         user = self.repository.get(username)
         if user is None:
+            logger.warning("login failed username=%s reason=unknown user", username)
             raise UserNotFoundError(f"No user named {username}")
         if not self.hasher.verify(password, user.password_hash):
+            logger.warning("login failed username=%s reason=wrong password", username)
             raise InvalidPasswordError("Wrong password")
+        logger.info("login succeeded username=%s", username)
         return user
