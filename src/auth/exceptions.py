@@ -7,3 +7,7 @@ class AuthError(Exception):
 
 class UserAlreadyExistsError(AuthError):
     """Raised when registering a username that is already taken."""
+
+
+class InvalidPasswordError(AuthError):
+    """Raised when a password breaks the password policy."""
