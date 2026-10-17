@@ -45,6 +45,9 @@ class UserService:
             UserAlreadyExistsError: If the username is already registered.
         """
         if len(password) < MIN_PASSWORD_LENGTH:
+            logger.warning(
+                "registration failed username=%s reason=password too short", username
+            )
             raise InvalidPasswordError(
                 f"Password must be at least {MIN_PASSWORD_LENGTH} characters"
             )
@@ -60,6 +63,9 @@ class UserService:
     def _ensure_username_free(self, username: str) -> None:
         """Raise ``UserAlreadyExistsError`` if the username is already registered."""
         if self.repository.get(username) is not None:
+            logger.warning(
+                "registration failed username=%s reason=username taken", username
+            )
             raise UserAlreadyExistsError(f"Username already taken: {username}")
 
     def login(self, username: str, password: str) -> User:
