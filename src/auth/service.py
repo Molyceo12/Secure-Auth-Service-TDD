@@ -16,7 +16,12 @@ logger = logging.getLogger(__name__)
 
 
 class UserService:
-    """Registers users and verifies their credentials."""
+    """Registers users and verifies their credentials.
+
+    Registration is thread-safe within one ``UserService`` instance: its lock makes
+    the "is the name free?" check and the save a single step. Share one instance
+    across threads; separate instances using the same repository are not protected.
+    """
 
     def __init__(self, repository: UserRepository, hasher: PasswordHasher) -> None:
         self.repository = repository
