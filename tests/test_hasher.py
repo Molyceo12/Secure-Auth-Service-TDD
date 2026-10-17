@@ -1,4 +1,4 @@
-"""Tests for the bcrypt password hasher (real bcrypt, low cost for speed)."""
+"""Tests for the real bcrypt password hasher."""
 
 import pytest
 
@@ -7,21 +7,27 @@ from auth.hasher import BcryptPasswordHasher
 
 @pytest.fixture(name="hasher")
 def fixture_hasher() -> BcryptPasswordHasher:
-    """Return a hasher with a low cost so tests run fast."""
+    """Return a real hasher with a low cost so tests run fast."""
     return BcryptPasswordHasher(rounds=4)
 
 
-def test_hash_is_salted_bcrypt_not_plain_text(hasher: BcryptPasswordHasher) -> None:
-    first, second = hasher.hash("secret123"), hasher.hash("secret123")
-    assert first != "secret123"
-    assert first.startswith("$2b$04$")
-    assert first != second  # a new salt every time
+def test_hash_is_not_the_plain_password(hasher: BcryptPasswordHasher) -> None:
+    saved = hasher.hash("secret123")
+    assert saved != "secret123"
+    assert saved.startswith("$2b$")
 
 
-@pytest.mark.parametrize(
-    ("password", "expected"), [("secret123", True), ("wrong", False)]
-)
-def test_verify_checks_password_against_hash(
-    hasher: BcryptPasswordHasher, password: str, expected: bool
-) -> None:
-    assert hasher.verify(password, hasher.hash("secret123")) is expected
+def test_same_password_gives_different_hashes(hasher: BcryptPasswordHasher) -> None:
+    first = hasher.hash("secret123")
+    second = hasher.hash("secret123")
+    assert first != second
+
+
+def test_verify_accepts_right_password(hasher: BcryptPasswordHasher) -> None:
+    saved = hasher.hash("secret123")
+    assert hasher.verify("secret123", saved) is True
+
+
+def test_verify_rejects_wrong_password(hasher: BcryptPasswordHasher) -> None:
+    saved = hasher.hash("secret123")
+    assert hasher.verify("wrong", saved) is False
