@@ -6,7 +6,7 @@ logging. Built with strict **Test-Driven Development** and **SOLID** design.
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
-![Tests](https://img.shields.io/badge/tests-20%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-21%20passed-brightgreen)
 
 ---
 
@@ -18,6 +18,7 @@ logging. Built with strict **Test-Driven Development** and **SOLID** design.
 - Custom errors: `UserAlreadyExistsError`, `InvalidPasswordError`, `UserNotFoundError`
   (all inherit from `AuthError`)
 - Structured logging of registrations and login attempts (passwords are never logged)
+- Thread-safe registration: two users can never take the same username at the same time
 - Storage and hashing are injected, so they can be swapped or mocked
 
 ## Setup
@@ -51,23 +52,28 @@ service.login("carol", "secret123")      # UserNotFoundError
 
 ### Demo
 
-Run every case with one command:
+Run 11 registration and login cases (successes, failures and edge cases) with one
+command. Each case shows the expected and actual outcome, followed by a table of the
+logs and a summary:
 
 ```bash
 python -m poetry run python examples/demo.py
 ```
 
 ```
-      log: INFO user registered username=alice
-[OK]  register alice / secret123       -> alice (hash $2b$12$qetZY...)
-[ERR] register alice again             -> UserAlreadyExistsError: Username already taken: alice
-[ERR] register bob / 123 (too short)   -> InvalidPasswordError: Password must be at least 8 characters
-      log: INFO login succeeded username=alice
-[OK]  login alice / secret123          -> alice (hash $2b$12$qetZY...)
-      log: WARNING login failed username=alice reason=wrong password
-[ERR] login alice / wrong-pass         -> InvalidPasswordError: Wrong password
-      log: WARNING login failed username=carol reason=unknown user
-[ERR] login carol (not registered)     -> UserNotFoundError: No user named carol
+:: LOGIN ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
++----+--------------------------------------+----------------------+----------------------------------------+-------+
+| #  | Case                                 | Expected             | Actual                                 | Check |
++====+======================================+======================+========================================+=======+
+| 6  | alice / secret123                    | OK                   | OK ($2b$12$pzx...)                     | PASS  |
+| 7  | bob / exactly8                       | OK                   | OK ($2b$12$tqq...)                     | PASS  |
+| 8  | alice / wrong-pass                   | InvalidPasswordError | InvalidPasswordError: Wrong password   | PASS  |
+| 9  | alice / SECRET123 (wrong case)       | InvalidPasswordError | InvalidPasswordError: Wrong password   | PASS  |
+| 10 | carol (was rejected at register)     | UserNotFoundError    | UserNotFoundError: No user named carol | PASS  |
+| 11 | Alice (usernames are case-sensitive) | UserNotFoundError    | UserNotFoundError: No user named Alice | PASS  |
++----+--------------------------------------+----------------------+----------------------------------------+-------+
+
+Summary: 11 cases | 4 succeeded | 7 rejected | 11/11 behaved as expected
 ```
 
 ## SOLID architecture
@@ -108,6 +114,21 @@ python -m poetry run python examples/demo.py
   so equal passwords give different hashes
 - Verification uses `bcrypt.checkpw` (constant-time comparison)
 - Plain passwords are **never stored or logged**; logs only contain usernames and events
+- **Thread-safe registration**: the "is the name free?" check and the save run inside
+  `with self._register_lock:`, so concurrent registrations cannot both take one username.
+  Slow bcrypt hashing stays outside the lock, and a quick check before hashing rejects
+  known duplicates without wasting a hash
+
+## Modern Python features
+
+| Feature | Where |
+|---|---|
+| Type hints everywhere, checked by **mypy (strict)** | all of `src/`, `tests/`, `examples/` (`User \| None`, `type[AuthError]`, ...) |
+| Context manager: `threading.Lock` | `with self._register_lock:` in `UserService.register` (always released, even on error) |
+| Context manager: `ThreadPoolExecutor` | `tests/test_concurrency.py` runs and cleanly shuts down the threads |
+| Context manager: `pytest.raises` | every test that expects an error |
+| `@dataclass(frozen=True)` | immutable `User` |
+| Abstract base classes | `UserRepository`, `PasswordHasher` |
 
 ## TDD process
 
@@ -125,6 +146,7 @@ Every feature followed **red → green → refactor**, and the commit history sh
 | Unknown user | login with unknown username raises UserNotFoundError | reject unknown usernames on login |
 | Wrong password | login with wrong password raises InvalidPasswordError | reject wrong passwords on login |
 | Logging | auth events are logged without passwords | log registrations and login attempts |
+| Thread safety | concurrent registrations of one username allow only one | make registration thread-safe with a lock |
 
 Red commits contain the failing test and only an empty stub, so pre-commit (mypy)
 still passes while the test fails for the right reason.
@@ -144,7 +166,7 @@ python -m poetry run python -m pytest -v
 python -m poetry run python -m pytest --cov --cov-report=term-missing
 ```
 
-**20 tests, 100% statement and branch coverage** (the run fails below 100%), see
+**21 tests, 100% statement and branch coverage** (the run fails below 100%), see
 [`reports/coverage.txt`](reports/coverage.txt).
 
 | Test file | Covers | Techniques |
@@ -155,6 +177,7 @@ python -m poetry run python -m pytest --cov --cov-report=term-missing
 | `test_repository.py` | in-memory storage | plain asserts |
 | `test_hasher.py` | real bcrypt hashing and verification | fixture |
 | `test_integration.py` | register + login with real parts | no mocks |
+| `test_concurrency.py` | 10 threads register one username at once, only 1 succeeds | `threading.Barrier`, `ThreadPoolExecutor`, slow repository |
 
 Shared fixtures in `tests/conftest.py` provide a mocked repository, a mocked hasher
 and a service wired to them.

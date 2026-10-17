@@ -1,6 +1,7 @@
 """User service: the main entry point of the authentication module."""
 
 import logging
+import threading
 
 from auth.exceptions import (
     InvalidPasswordError,
@@ -15,11 +16,19 @@ logger = logging.getLogger(__name__)
 
 
 class UserService:
-    """Registers users and verifies their credentials."""
+    """Registers users and verifies their credentials.
+
+    Registration is thread-safe within one ``UserService`` instance: its lock makes
+    the "is the name free?" check and the save a single step. Share one instance
+    across threads; separate instances using the same repository are not protected.
+    """
 
     def __init__(self, repository: UserRepository, hasher: PasswordHasher) -> None:
         self.repository = repository
         self.hasher = hasher
+        # Makes "is the name free? -> save" one step, so two threads can't
+        # register the same username at the same time.
+        self._register_lock = threading.Lock()
 
     def register(self, username: str, password: str) -> User:
         """Register a new user with a hashed password.
@@ -39,12 +48,19 @@ class UserService:
             raise InvalidPasswordError(
                 f"Password must be at least {MIN_PASSWORD_LENGTH} characters"
             )
-        if self.repository.get(username) is not None:
-            raise UserAlreadyExistsError(f"Username already taken: {username}")
+        self._ensure_username_free(username)  # fail fast, before slow hashing
         user = User(username, self.hasher.hash(password))
-        self.repository.add(user)
+        with self._register_lock:
+            # Re-check: another thread may have taken the name while we hashed.
+            self._ensure_username_free(username)
+            self.repository.add(user)
         logger.info("user registered username=%s", username)
         return user
+
+    def _ensure_username_free(self, username: str) -> None:
+        """Raise ``UserAlreadyExistsError`` if the username is already registered."""
+        if self.repository.get(username) is not None:
+            raise UserAlreadyExistsError(f"Username already taken: {username}")
 
     def login(self, username: str, password: str) -> User:
         """Check a user's credentials.

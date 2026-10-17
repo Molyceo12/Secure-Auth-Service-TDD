@@ -33,7 +33,7 @@ class ListHandler(logging.Handler):
 def print_table(title: str, headers: list[str], rows: list[list[str]]) -> None:
     """Print rows as a bordered text table with a title bar."""
     widths = [
-        max(len(header), *(len(row[i]) for row in rows))
+        max([len(header), *(len(row[i]) for row in rows)])
         for i, header in enumerate(headers)
     ]
     border = "+" + "+".join("-" * (width + 2) for width in widths) + "+"
