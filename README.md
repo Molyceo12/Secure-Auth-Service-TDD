@@ -6,7 +6,7 @@ logging. Built with strict **Test-Driven Development** and **SOLID** design.
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
-![Tests](https://img.shields.io/badge/tests-21%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-23%20passed-brightgreen)
 
 ---
 
@@ -17,7 +17,9 @@ logging. Built with strict **Test-Driven Development** and **SOLID** design.
 - `login(username, password)`: verifies the password against the stored hash
 - Custom errors: `UserAlreadyExistsError`, `InvalidPasswordError`, `UserNotFoundError`
   (all inherit from `AuthError`)
-- Structured logging of registrations and login attempts (passwords are never logged)
+- Structured logging with levels (passwords are never logged):
+  - INFO: successful registration and login
+  - WARNING: failed registration (short password, username taken) and failed login (unknown user, wrong password)
 - Thread-safe registration: two users can never take the same username at the same time
 - Storage and hashing are injected, so they can be swapped or mocked
 
@@ -146,6 +148,7 @@ Every feature followed **red → green → refactor**, and the commit history sh
 | Unknown user | login with unknown username raises UserNotFoundError | reject unknown usernames on login |
 | Wrong password | login with wrong password raises InvalidPasswordError | reject wrong passwords on login |
 | Logging | auth events are logged without passwords | log registrations and login attempts |
+| Failed registrations | failed registrations are logged as warnings | log failed registrations as warnings |
 | Thread safety | concurrent registrations of one username allow only one | make registration thread-safe with a lock |
 
 Red commits contain the failing test and only an empty stub, so pre-commit (mypy)
@@ -166,14 +169,14 @@ python -m poetry run python -m pytest -v
 python -m poetry run python -m pytest --cov --cov-report=term-missing
 ```
 
-**21 tests, 100% statement and branch coverage** (the run fails below 100%), see
+**23 tests, 100% statement and branch coverage** (the run fails below 100%), see
 [`reports/coverage.txt`](reports/coverage.txt).
 
 | Test file | Covers | Techniques |
 |---|---|---|
 | `test_registration.py` | register, duplicates, password policy | `pytest-mock` (mocked repository and hasher), `parametrize`, `pytest.raises` |
 | `test_login.py` | login success and failures | `pytest-mock`, `pytest.raises` |
-| `test_logging.py` | each auth event is logged, no passwords in logs | `caplog`, autouse fixture |
+| `test_logging.py` | each auth event is logged at the right level (INFO / WARNING), no passwords in logs | `caplog`, autouse fixture |
 | `test_repository.py` | in-memory storage | plain asserts |
 | `test_hasher.py` | real bcrypt hashing and verification | fixture |
 | `test_integration.py` | register + login with real parts | no mocks |

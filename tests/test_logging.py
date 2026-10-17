@@ -5,7 +5,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from auth.exceptions import InvalidPasswordError, UserNotFoundError
+from auth.exceptions import (
+    InvalidPasswordError,
+    UserAlreadyExistsError,
+    UserNotFoundError,
+)
 from auth.models import User
 from auth.service import UserService
 
@@ -21,6 +25,27 @@ def test_registration_is_logged(
 ) -> None:
     service.register("alice", "secret123")
     assert "user registered username=alice" in caplog.text
+    assert "secret123" not in caplog.text
+
+
+def test_short_password_registration_is_logged_as_warning(
+    service: UserService, caplog: pytest.LogCaptureFixture
+) -> None:
+    with pytest.raises(InvalidPasswordError):
+        service.register("bob", "short1")
+    assert caplog.records[-1].levelname == "WARNING"
+    assert "registration failed username=bob reason=password too short" in caplog.text
+    assert "short1" not in caplog.text
+
+
+def test_duplicate_registration_is_logged_as_warning(
+    service: UserService, repository: MagicMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    repository.get.return_value = User("alice", "hashed")
+    with pytest.raises(UserAlreadyExistsError):
+        service.register("alice", "secret123")
+    assert caplog.records[-1].levelname == "WARNING"
+    assert "registration failed username=alice reason=username taken" in caplog.text
     assert "secret123" not in caplog.text
 
 
