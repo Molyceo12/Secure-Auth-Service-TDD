@@ -9,6 +9,7 @@ from auth.services import UserService
 
 
 def test_register_then_login_with_real_parts() -> None:
+    """Register, log in, reject a wrong password and a duplicate, with real parts."""
     service = UserService(InMemoryUserRepository(), BcryptPasswordHasher(rounds=4))
 
     user = service.register("alice", "secret123")
