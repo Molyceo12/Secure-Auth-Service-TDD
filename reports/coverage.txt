@@ -1,19 +1,26 @@
 Secure Auth Service - Test Coverage Report
-Generated: 2026-10-17 23:51 | Python 3.14.8
+Generated: 2026-10-19 10:08 | Python 3.14.8
 Command: python -m pytest --cov --cov-report=term-missing
 
 _______________ coverage: platform win32, python 3.14.8-final-0 _______________
 
-Name                     Stmts   Miss Branch BrPart  Cover   Missing
---------------------------------------------------------------------
-src\auth\__init__.py         0      0      0      0   100%
-src\auth\exceptions.py       4      0      0      0   100%
-src\auth\hasher.py          10      0      0      0   100%
-src\auth\interfaces.py       4      0      0      0   100%
-src\auth\models.py           3      0      0      0   100%
-src\auth\repository.py       9      0      0      0   100%
-src\auth\service.py         37      0      8      0   100%
---------------------------------------------------------------------
-TOTAL                       67      0      8      0   100%
+Name                                            Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------------------------------------
+src\auth\__init__.py                                0      0      0      0   100%
+src\auth\exceptions.py                              4      0      0      0   100%
+src\auth\hashing\__init__.py                        3      0      0      0   100%
+src\auth\hashing\base.py                            2      0      0      0   100%
+src\auth\hashing\bcrypt_hasher.py                  10      0      0      0   100%
+src\auth\models\__init__.py                         2      0      0      0   100%
+src\auth\models\user.py                             3      0      0      0   100%
+src\auth\repositories\__init__.py                   3      0      0      0   100%
+src\auth\repositories\base.py                       3      0      0      0   100%
+src\auth\repositories\in_memory_repository.py       9      0      0      0   100%
+src\auth\services\__init__.py                       2      0      0      0   100%
+src\auth\services\user_service.py                  38      0      8      0   100%
+src\auth\utils\__init__.py                          2      0      0      0   100%
+src\auth\utils\password_policy.py                   3      0      0      0   100%
+-------------------------------------------------------------------------------------------
+TOTAL                                              84      0      8      0   100%
 Required test coverage of 100.0% reached. Total coverage: 100.00%
-23 passed in 0.47s
+============================= 23 passed in 0.48s ==============================

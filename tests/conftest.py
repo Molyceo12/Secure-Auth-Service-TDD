@@ -5,8 +5,9 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from auth.interfaces import PasswordHasher, UserRepository
-from auth.service import UserService
+from auth.hashing import PasswordHasher
+from auth.repositories import UserRepository
+from auth.services import UserService
 
 
 @pytest.fixture(name="repository")

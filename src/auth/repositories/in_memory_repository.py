@@ -1,7 +1,7 @@
 """In-memory user storage."""
 
-from auth.interfaces import UserRepository
 from auth.models import User
+from auth.repositories.base import UserRepository
 
 
 class InMemoryUserRepository(UserRepository):

@@ -38,9 +38,9 @@ Without Poetry: `python -m pip install -r requirements.txt` then `python -m pip 
 ## Usage
 
 ```python
-from auth.hasher import BcryptPasswordHasher
-from auth.repository import InMemoryUserRepository
-from auth.service import UserService
+from auth.hashing import BcryptPasswordHasher
+from auth.repositories import InMemoryUserRepository
+from auth.services import UserService
 
 service = UserService(InMemoryUserRepository(), BcryptPasswordHasher())
 
@@ -87,7 +87,7 @@ Summary: 11 cases | 4 succeeded | 7 rejected | 11/11 behaved as expected
        depends on    │       │    depends on
       (interfaces)   ▼       ▼
         ┌────────────────┐ ┌────────────────┐
-        │ UserRepository │ │ PasswordHasher │   ABCs in interfaces.py
+        │ UserRepository │ │ PasswordHasher │   ABCs in repositories/ and hashing/ (base.py)
         └───────┬────────┘ └───────┬────────┘
                 ▼                  ▼
    InMemoryUserRepository   BcryptPasswordHasher   concrete implementations
@@ -101,14 +101,26 @@ Summary: 11 cases | 4 succeeded | 7 rejected | 11/11 behaved as expected
 | **I**nterface segregation | two small interfaces: `get`/`add` and `hash`/`verify` |
 | **D**ependency inversion | `UserService(repository, hasher)` receives abstractions through its constructor (dependency injection) |
 
-| File | Content |
-|---|---|
-| `src/auth/models.py` | `User` dataclass (`username`, `password_hash`) |
-| `src/auth/exceptions.py` | `AuthError` and the 3 custom errors |
-| `src/auth/interfaces.py` | `UserRepository`, `PasswordHasher` |
-| `src/auth/repository.py` | `InMemoryUserRepository` |
-| `src/auth/hasher.py` | `BcryptPasswordHasher` |
-| `src/auth/service.py` | `UserService` |
+```
+src/auth/
+├── exceptions.py                  # AuthError and the 3 custom errors
+├── models/
+│   └── user.py                    # User dataclass (username, password_hash)
+├── repositories/
+│   ├── base.py                    # UserRepository interface
+│   └── in_memory_repository.py    # InMemoryUserRepository
+├── hashing/
+│   ├── base.py                    # PasswordHasher interface
+│   └── bcrypt_hasher.py           # BcryptPasswordHasher
+├── services/
+│   └── user_service.py            # UserService (register, login, logging)
+└── utils/
+    └── password_policy.py         # MIN_PASSWORD_LENGTH and the length check
+tests/
+├── conftest.py                    # shared fixtures (mocked repository and hasher)
+├── unit/                          # one part at a time, dependencies mocked
+└── integration/                   # real parts together, including threads
+```
 
 ## Security notes
 
@@ -127,7 +139,7 @@ Summary: 11 cases | 4 succeeded | 7 rejected | 11/11 behaved as expected
 |---|---|
 | Type hints everywhere, checked by **mypy (strict)** | all of `src/`, `tests/`, `examples/` (`User \| None`, `type[AuthError]`, ...) |
 | Context manager: `threading.Lock` | `with self._register_lock:` in `UserService.register` (always released, even on error) |
-| Context manager: `ThreadPoolExecutor` | `tests/test_concurrency.py` runs and cleanly shuts down the threads |
+| Context manager: `ThreadPoolExecutor` | `tests/integration/test_concurrency.py` runs and cleanly shuts down the threads |
 | Context manager: `pytest.raises` | every test that expects an error |
 | `@dataclass(frozen=True)` | immutable `User` |
 | Abstract base classes | `UserRepository`, `PasswordHasher` |
@@ -174,13 +186,13 @@ python -m poetry run python -m pytest --cov --cov-report=term-missing
 
 | Test file | Covers | Techniques |
 |---|---|---|
-| `test_registration.py` | register, duplicates, password policy | `pytest-mock` (mocked repository and hasher), `parametrize`, `pytest.raises` |
-| `test_login.py` | login success and failures | `pytest-mock`, `pytest.raises` |
-| `test_logging.py` | each auth event is logged at the right level (INFO / WARNING), no passwords in logs | `caplog`, autouse fixture |
-| `test_repository.py` | in-memory storage | plain asserts |
-| `test_hasher.py` | real bcrypt hashing and verification | fixture |
-| `test_integration.py` | register + login with real parts | no mocks |
-| `test_concurrency.py` | 10 threads register one username at once, only 1 succeeds | `threading.Barrier`, `ThreadPoolExecutor`, slow repository |
+| `unit/test_registration.py` | register, duplicates, password policy | `pytest-mock` (mocked repository and hasher), `parametrize`, `pytest.raises` |
+| `unit/test_login.py` | login success and failures | `pytest-mock`, `pytest.raises` |
+| `unit/test_logging.py` | each auth event is logged at the right level (INFO / WARNING), no passwords in logs | `caplog`, autouse fixture |
+| `unit/test_repository.py` | in-memory storage | plain asserts |
+| `unit/test_hasher.py` | real bcrypt hashing and verification | fixture |
+| `integration/test_integration.py` | register + login with real parts | no mocks |
+| `integration/test_concurrency.py` | 10 threads register one username at once, only 1 succeeds | `threading.Barrier`, `ThreadPoolExecutor`, slow repository |
 
 Shared fixtures in `tests/conftest.py` provide a mocked repository, a mocked hasher
 and a service wired to them.

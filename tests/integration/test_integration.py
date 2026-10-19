@@ -3,12 +3,13 @@
 import pytest
 
 from auth.exceptions import InvalidPasswordError, UserAlreadyExistsError
-from auth.hasher import BcryptPasswordHasher
-from auth.repository import InMemoryUserRepository
-from auth.service import UserService
+from auth.hashing import BcryptPasswordHasher
+from auth.repositories import InMemoryUserRepository
+from auth.services import UserService
 
 
 def test_register_then_login_with_real_parts() -> None:
+    """Register, log in, reject a wrong password and a duplicate, with real parts."""
     service = UserService(InMemoryUserRepository(), BcryptPasswordHasher(rounds=4))
 
     user = service.register("alice", "secret123")
