@@ -8,10 +8,11 @@ from auth.exceptions import (
     UserAlreadyExistsError,
     UserNotFoundError,
 )
-from auth.interfaces import PasswordHasher, UserRepository
+from auth.hashing import PasswordHasher
 from auth.models import User
+from auth.repositories import UserRepository
+from auth.utils import MIN_PASSWORD_LENGTH, is_password_long_enough
 
-MIN_PASSWORD_LENGTH = 8  # password policy: shortest allowed password
 logger = logging.getLogger(__name__)
 
 
@@ -44,7 +45,7 @@ class UserService:
             InvalidPasswordError: If the password is too short.
             UserAlreadyExistsError: If the username is already registered.
         """
-        if len(password) < MIN_PASSWORD_LENGTH:
+        if not is_password_long_enough(password):
             logger.warning(
                 "registration failed username=%s reason=password too short", username
             )

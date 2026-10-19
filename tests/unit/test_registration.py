@@ -6,7 +6,7 @@ import pytest
 
 from auth.exceptions import InvalidPasswordError, UserAlreadyExistsError
 from auth.models import User
-from auth.service import UserService
+from auth.services import UserService
 
 
 def test_register_hashes_password_and_saves_user(

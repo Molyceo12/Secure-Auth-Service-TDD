@@ -6,7 +6,7 @@ import pytest
 
 from auth.exceptions import InvalidPasswordError, UserNotFoundError
 from auth.models import User
-from auth.service import UserService
+from auth.services import UserService
 
 ALICE = User("alice", "stored-hash")
 
