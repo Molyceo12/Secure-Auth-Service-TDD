@@ -5,10 +5,10 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 from auth.exceptions import UserAlreadyExistsError
-from auth.hasher import BcryptPasswordHasher
+from auth.hashing import BcryptPasswordHasher
 from auth.models import User
-from auth.repository import InMemoryUserRepository
-from auth.service import UserService
+from auth.repositories import InMemoryUserRepository
+from auth.services import UserService
 
 THREADS = 10
 

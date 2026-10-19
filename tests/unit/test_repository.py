@@ -1,7 +1,7 @@
 """Tests for the in-memory user repository."""
 
 from auth.models import User
-from auth.repository import InMemoryUserRepository
+from auth.repositories import InMemoryUserRepository
 
 
 def test_repository_finds_added_users() -> None:

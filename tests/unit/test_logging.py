@@ -11,13 +11,13 @@ from auth.exceptions import (
     UserNotFoundError,
 )
 from auth.models import User
-from auth.service import UserService
+from auth.services import UserService
 
 
 @pytest.fixture(autouse=True)
 def capture_info_logs(caplog: pytest.LogCaptureFixture) -> None:
     """Record INFO and higher log lines from the service in every test."""
-    caplog.set_level(logging.INFO, logger="auth.service")
+    caplog.set_level(logging.INFO, logger="auth.services.user_service")
 
 
 def test_registration_is_logged(

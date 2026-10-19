@@ -2,7 +2,7 @@
 
 import bcrypt
 
-from auth.interfaces import PasswordHasher
+from auth.hashing.base import PasswordHasher
 
 
 class BcryptPasswordHasher(PasswordHasher):

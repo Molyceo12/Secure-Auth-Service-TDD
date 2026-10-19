@@ -13,10 +13,10 @@ from auth.exceptions import (
     UserAlreadyExistsError,
     UserNotFoundError,
 )
-from auth.hasher import BcryptPasswordHasher
+from auth.hashing import BcryptPasswordHasher
 from auth.models import User
-from auth.repository import InMemoryUserRepository
-from auth.service import UserService
+from auth.repositories import InMemoryUserRepository
+from auth.services import UserService
 
 
 class ListHandler(logging.Handler):

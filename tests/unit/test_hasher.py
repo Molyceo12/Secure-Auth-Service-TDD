@@ -2,7 +2,7 @@
 
 import pytest
 
-from auth.hasher import BcryptPasswordHasher
+from auth.hashing import BcryptPasswordHasher
 
 
 @pytest.fixture(name="hasher")
