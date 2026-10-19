@@ -220,4 +220,4 @@ commit → sign-off).
 | #3 | `feature/login` | login, errors, logging |
 | #4 | `docs/coverage-and-readme` | demo, docstrings, README, coverage report |
 
-Releases go from `develop` to `main` through `release/*` and are tagged (`v1.0.0`).
+Releases go from `develop` to `main` through `release/*` and are tagged (`v1.0.0`, `v2.0.0`).
