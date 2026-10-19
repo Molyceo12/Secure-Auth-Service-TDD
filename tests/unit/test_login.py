@@ -14,6 +14,7 @@ ALICE = User("alice", "stored-hash")
 def test_login_returns_user_for_right_password(
     service: UserService, repository: MagicMock, hasher: MagicMock
 ) -> None:
+    """The right password returns the user, checked against the stored hash."""
     repository.get.return_value = ALICE
     hasher.verify.return_value = True
 
@@ -22,6 +23,7 @@ def test_login_returns_user_for_right_password(
 
 
 def test_login_unknown_username_raises(service: UserService, hasher: MagicMock) -> None:
+    """An unknown username raises UserNotFoundError without checking a hash."""
     with pytest.raises(UserNotFoundError):
         service.login("bob", "secret123")
 
@@ -31,6 +33,7 @@ def test_login_unknown_username_raises(service: UserService, hasher: MagicMock) 
 def test_login_wrong_password_raises(
     service: UserService, repository: MagicMock, hasher: MagicMock
 ) -> None:
+    """A wrong password raises InvalidPasswordError."""
     repository.get.return_value = ALICE
     hasher.verify.return_value = False
 

@@ -12,6 +12,7 @@ from auth.services import UserService
 def test_register_hashes_password_and_saves_user(
     service: UserService, repository: MagicMock, hasher: MagicMock
 ) -> None:
+    """Registration hashes the password and saves the new user."""
     user = service.register("alice", "secret123")
 
     assert user == User("alice", "hashed")
@@ -22,6 +23,7 @@ def test_register_hashes_password_and_saves_user(
 def test_register_existing_username_raises(
     service: UserService, repository: MagicMock, hasher: MagicMock
 ) -> None:
+    """A taken username raises UserAlreadyExistsError and saves nothing."""
     repository.get.return_value = User("alice", "old-hash")
 
     with pytest.raises(UserAlreadyExistsError):
@@ -35,6 +37,7 @@ def test_register_existing_username_raises(
 def test_register_short_password_raises(
     service: UserService, hasher: MagicMock, password: str
 ) -> None:
+    """A password under 8 characters raises InvalidPasswordError before hashing."""
     with pytest.raises(InvalidPasswordError):
         service.register("alice", password)
 
@@ -42,4 +45,5 @@ def test_register_short_password_raises(
 
 
 def test_register_accepts_password_of_minimum_length(service: UserService) -> None:
+    """A password of exactly 8 characters is accepted."""
     assert service.register("alice", "12345678").username == "alice"

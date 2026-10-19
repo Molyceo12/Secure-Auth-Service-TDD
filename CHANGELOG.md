@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.0.0] - 2026-10-19
+
+Code split into packages; test docstrings.
+
+### Changed
+- Modules grouped into `hashing/`, `models/`, `repositories/`, `services/` and
+  `utils/` packages, each interface in its own `base.py`; import paths changed
+- Tests split into `tests/unit/` and `tests/integration/`
+
+### Added
+- A one-line docstring on every test function
+
 ## [1.0.0] - 2026-10-18
 
 First release of the secure authentication module, built with strict TDD.
